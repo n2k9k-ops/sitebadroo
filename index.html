@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connexion - Note Privée</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Note Privée</h1>
+        </header>
+
+        <div class="login-form">
+            <h2>Accès Sécurisé</h2>
+            <div class="input-group">
+                <div class="captcha-container">
+                    <div id="captchaBox" class="captcha-text"></div>
+                    <input type="text" id="captchaInput" placeholder="Recopiez le code ci-dessus">
+                </div>
+                <input type="password" id="passwordInput" placeholder="Mot de passe">
+                <button id="loginBtn">Se connecter</button>
+            </div>
+            <p id="loginError" style="color: #fca5a5; text-align: center; margin-top: 15px; display: none; font-size: 0.875rem;"></p>
+        </div>
+    </div>
+
+    <script>
+        let currentCaptcha = "";
+
+        function generateCaptcha() {
+            const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+            let captcha = "";
+            for (let i = 0; i < 5; i++) {
+                captcha += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            currentCaptcha = captcha;
+            document.getElementById('captchaBox').textContent = captcha;
+        }
+
+        generateCaptcha();
+
+        document.getElementById('loginBtn').addEventListener('click', async () => {
+            const captcha = document.getElementById('captchaInput').value.toUpperCase();
+            const password = document.getElementById('passwordInput').value;
+            const errorElement = document.getElementById('loginError');
+
+            if (captcha !== currentCaptcha) {
+                errorElement.textContent = "Code Captcha incorrect";
+                errorElement.style.display = 'block';
+                generateCaptcha();
+                return;
+            }
+
+            try {
+                const response = await fetch('/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password })
+                });
+
+                if (response.ok) {
+                    window.location.reload();
+                } else {
+                    errorElement.textContent = "Mot de passe incorrect";
+                    errorElement.style.display = 'block';
+                    generateCaptcha();
+                }
+            } catch (error) {
+                console.error('Erreur de connexion:', error);
+            }
+        });
+
+        document.querySelectorAll('input').forEach(input => {
+            input.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    document.getElementById('loginBtn').click();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
